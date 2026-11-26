@@ -23,7 +23,7 @@ $env:PYTHONUTF8 = "1"
 pip install torch --index-url https://download.pytorch.org/whl/cpu
 pip install -r requirements.txt
 python scripts/setup_pp.py                    # tải code upstream + weights (~20 MB); không có git: python scripts/setup_pp.py --download-zip
-$DataVF = "C:\duong-dan\Data-VF"
+$DataVF = "F:\Coder\AI_VIN\K5-L23-DAY14-NguyenThanhDat-2A202603258-PointPillarsPrelabel\data-VF"
 python scripts/pp_selftest.py --data "$DataVF"
 ```
 
@@ -38,6 +38,7 @@ python scripts/setup_pp.py                    # tải code upstream + weights (~
 DataVF="/duong-dan/Data-VF"
 python scripts/pp_selftest.py --data "$DataVF"
 ```
+
 Đặt `DataVF` thành đường dẫn thực tế tới thư mục VF từ Day 13. Thư mục này phải chứa trực tiếp `sequence_01` đến `sequence_05`, mỗi sequence có đủ 60 frame LiDAR. Khi mở terminal mới, đặt lại biến trước khi chạy lệnh. Selftest in `TẤT CẢ OK` khi cài đặt thành công. Nếu dùng Docker, xem hướng dẫn trong `Dockerfile`.
 
 ## 1. Buổi giảng: 6 frame chung (mọi người giống nhau)
@@ -46,24 +47,25 @@ python scripts/pp_selftest.py --data "$DataVF"
 python scripts/pp_prelabel.py --data "$DataVF" --frames demo/frames_lec.txt --out out/lec.json --plot out/lec_png
 python scripts/pp_prelabel.py --data "$DataVF" --frames demo/frames_lec.txt --set score_thr=0.4 --set min_points=5 --out out/lec_filtered.json --plot out/lec_filtered_png
 ```
+
 Lệnh đầu lưu `out/lec.json` và 6 ảnh trong `out/lec_png/`. Lệnh thứ hai lưu `out/lec_filtered.json` và 6 ảnh trong `out/lec_filtered_png/`. Mở cùng một frame trong hai thư mục để đối chiếu các hộp qua 7 góc camera và hình nhìn từ trên xuống (BEV). Xem hộp nào được lọc là hộp thừa và vật thể thật nào có thể bị sót.
 
 ## 2. Lab buổi chiều: frame riêng theo mã học viên + SEED
 
 SEED **chỉ được coach công bố lúc bắt đầu lab**. Thay `<ID>`, `<SEED>` và `<tên>` bằng giá trị thực tế. Với CVAT local, thay `<URL>` bằng `http://localhost:8080`. Cú pháp tùy chọn `[--org <SLUG>]` áp dụng khi dùng tổ chức CVAT.
 
-| Bước | Lệnh | Kết quả |
-|---|---|---|
-| 1. Chọn frame | `python scripts/vf_cvat.py day14 --student "<ID>" --seed "<SEED>" --data "$DataVF"` | `d14_<ID>/frames_A.txt` (3 frame tune), `frames_B.txt` (12 frame nộp) |
-| 2. Pre-label A | `python scripts/pp_prelabel.py --data "$DataVF" --frames "d14_<ID>/frames_A.txt" --out "d14_<ID>/pred_A.json" --plot "d14_<ID>/png_A"` | box của cấu hình gốc + ảnh để xem |
-| 3. Lên CVAT | `python scripts/vf_cvat.py prelabel --student "<ID>" --task A --data "$DataVF" --boxes "d14_<ID>/pred_A.json" --host "<URL>" --user "<tên>"` | task `D14-<ID>-A` có sẵn cuboid (thuộc tính `pp_id`, `score`, `warn`, `note`) |
-| 4. Sửa tay A | Mở từng frame trên CVAT. Xóa hộp thừa, thêm vật bị sót và chỉnh hộp sai theo [hướng dẫn gán nhãn 3D Cuboid](docs/GUIDELINE.md). Khi vẽ hộp mới, chọn **Shape**. Bấm **Save**. | nhãn tham chiếu của bạn |
-| 5. Lấy tham chiếu | `python scripts/vf_cvat.py reference --student "<ID>" --task A --host "<URL>" --user "<tên>"` | `d14_<ID>/ref_A.json` |
-| 5b. Dự đoán trước sweep | Làm theo [lệnh ghi và đẩy dự đoán](#đẩy-dự-đoán-trước-sweep-bước-5b). | Mục 1 báo cáo đã được push, làm bằng chứng khi đối chiếu ở bước 8 |
-| 6. Tune | `python scripts/pp_sweep.py --data "$DataVF" --frames "d14_<ID>/frames_A.txt" --gt "d14_<ID>/ref_A.json" --grid score_thr=0.1,0.2,0.3,0.4,0.5 --grid min_points=0,5,10 --out "d14_<ID>/sweep.csv"` | `sweep.csv`, `best_config.json`, top 10, leave-one-out |
-| 7. Pre-label B | `python scripts/pp_prelabel.py --data "$DataVF" --frames "d14_<ID>/frames_B.txt" --config "d14_<ID>/best_config.json" --out "d14_<ID>/pred_B.json"` rồi `python scripts/vf_cvat.py prelabel --student "<ID>" --task B --data "$DataVF" --boxes "d14_<ID>/pred_B.json" --host "<URL>" --user "<tên>"` | task `D14-<ID>-B` để sửa đủ 12 frame trên CVAT theo [hướng dẫn gán nhãn 3D Cuboid](docs/GUIDELINE.md). Khi thêm hộp, chọn **Shape**. |
-| 8. Trước/sau | `python scripts/pp_compare.py --data "$DataVF" --frames "d14_<ID>/frames_A.txt" --gt "d14_<ID>/ref_A.json" --tuned "d14_<ID>/best_config.json" --out "d14_<ID>/compare"` | Mức thay đổi chi phí sửa và ảnh so sánh từng frame. Đưa một ảnh vào báo cáo và giải thích vì sao kết quả khớp hoặc lệch dự đoán ở bước 5b. |
-| 9. Xuất nhãn B, nộp | Làm theo [bước 9 bên dưới](#xuất-nhãn-và-đo-công-sửa-tập-b-bước-9). | `d14_<ID>/ref_B.json` và số đo cho mục 4 báo cáo |
+| Bước                    | Lệnh                                                                                                                                                                                                                                                                                                 | Kết quả                                                                                                                                    |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1. Chọn frame           | `python scripts/vf_cvat.py day14 --student "<ID>" --seed "<SEED>" --data "$DataVF"`                                                                                                                                                                                                                  | `d14_<ID>/frames_A.txt` (3 frame tune), `frames_B.txt` (12 frame nộp)                                                                      |
+| 2. Pre-label A          | `python scripts/pp_prelabel.py --data "$DataVF" --frames "d14_<ID>/frames_A.txt" --out "d14_<ID>/pred_A.json" --plot "d14_<ID>/png_A"`                                                                                                                                                               | box của cấu hình gốc + ảnh để xem                                                                                                          |
+| 3. Lên CVAT             | `python scripts/vf_cvat.py prelabel --student "<ID>" --task A --data "$DataVF" --boxes "d14_<ID>/pred_A.json" --host "<URL>" --user "<tên>"`                                                                                                                                                         | task `D14-<ID>-A` có sẵn cuboid (thuộc tính `pp_id`, `score`, `warn`, `note`)                                                              |
+| 4. Sửa tay A            | Mở từng frame trên CVAT. Xóa hộp thừa, thêm vật bị sót và chỉnh hộp sai theo [hướng dẫn gán nhãn 3D Cuboid](docs/GUIDELINE.md). Khi vẽ hộp mới, chọn **Shape**. Bấm **Save**.                                                                                                                        | nhãn tham chiếu của bạn                                                                                                                    |
+| 5. Lấy tham chiếu       | `python scripts/vf_cvat.py reference --student "<ID>" --task A --host "<URL>" --user "<tên>"`                                                                                                                                                                                                        | `d14_<ID>/ref_A.json`                                                                                                                      |
+| 5b. Dự đoán trước sweep | Làm theo [lệnh ghi và đẩy dự đoán](#đẩy-dự-đoán-trước-sweep-bước-5b).                                                                                                                                                                                                                                | Mục 1 báo cáo đã được push, làm bằng chứng khi đối chiếu ở bước 8                                                                          |
+| 6. Tune                 | `python scripts/pp_sweep.py --data "$DataVF" --frames "d14_<ID>/frames_A.txt" --gt "d14_<ID>/ref_A.json" --grid score_thr=0.1,0.2,0.3,0.4,0.5 --grid min_points=0,5,10 --out "d14_<ID>/sweep.csv"`                                                                                                   | `sweep.csv`, `best_config.json`, top 10, leave-one-out                                                                                     |
+| 7. Pre-label B          | `python scripts/pp_prelabel.py --data "$DataVF" --frames "d14_<ID>/frames_B.txt" --config "d14_<ID>/best_config.json" --out "d14_<ID>/pred_B.json"` rồi `python scripts/vf_cvat.py prelabel --student "<ID>" --task B --data "$DataVF" --boxes "d14_<ID>/pred_B.json" --host "<URL>" --user "<tên>"` | task `D14-<ID>-B` để sửa đủ 12 frame trên CVAT theo [hướng dẫn gán nhãn 3D Cuboid](docs/GUIDELINE.md). Khi thêm hộp, chọn **Shape**.       |
+| 8. Trước/sau            | `python scripts/pp_compare.py --data "$DataVF" --frames "d14_<ID>/frames_A.txt" --gt "d14_<ID>/ref_A.json" --tuned "d14_<ID>/best_config.json" --out "d14_<ID>/compare"`                                                                                                                             | Mức thay đổi chi phí sửa và ảnh so sánh từng frame. Đưa một ảnh vào báo cáo và giải thích vì sao kết quả khớp hoặc lệch dự đoán ở bước 5b. |
+| 9. Xuất nhãn B, nộp     | Làm theo [bước 9 bên dưới](#xuất-nhãn-và-đo-công-sửa-tập-b-bước-9).                                                                                                                                                                                                                                  | `d14_<ID>/ref_B.json` và số đo cho mục 4 báo cáo                                                                                           |
 
 ### Đẩy dự đoán trước sweep (bước 5b)
 
@@ -109,11 +111,11 @@ CVAT ở đây là CVAT cá nhân chạy Docker trên máy bạn (như Day 13). 
 
 ## 3. Các tham số (`vf_pp/core.py:Config`)
 
-| Nhóm | Tham số | Ý nghĩa |
-|---|---|---|
-| A. Đầu vào | `voxel_size` (0.16), `intensity_mode` clip/log/const, `intensity_scale`, `ground_mode` fixed/auto, `delta_z`, `passes` (4) | Đưa điểm VF về miền KITTI. Model chỉ nhìn 90° phía trước nên mỗi frame chạy 4 lượt xoay để phủ 360° |
-| B. Đầu ra model | `score_thr` (0.1), `thr_car`/`thr_cyc`/`thr_ped`, `nms_thr`, `nms_pre`, `max_num` | Lọc theo độ tin cậy và NMS |
-| C. Hậu xử lý VF | `range_m` (50), `min_points` (0), `merge_nms_thr`, `size_pad_m`, `truck_l_min`/`truck_h_min`, `bus_l_min`/`bus_h_min` | KITTI không có Truck/Bus: box Car dài/cao sẽ được đổi lớp theo luật kích thước |
+| Nhóm            | Tham số                                                                                                                    | Ý nghĩa                                                                                             |
+| --------------- | -------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| A. Đầu vào      | `voxel_size` (0.16), `intensity_mode` clip/log/const, `intensity_scale`, `ground_mode` fixed/auto, `delta_z`, `passes` (4) | Đưa điểm VF về miền KITTI. Model chỉ nhìn 90° phía trước nên mỗi frame chạy 4 lượt xoay để phủ 360° |
+| B. Đầu ra model | `score_thr` (0.1), `thr_car`/`thr_cyc`/`thr_ped`, `nms_thr`, `nms_pre`, `max_num`                                          | Lọc theo độ tin cậy và NMS                                                                          |
+| C. Hậu xử lý VF | `range_m` (50), `min_points` (0), `merge_nms_thr`, `size_pad_m`, `truck_l_min`/`truck_h_min`, `bus_l_min`/`bus_h_min`      | KITTI không có Truck/Bus: box Car dài/cao sẽ được đổi lớp theo luật kích thước                      |
 
 Ghi đè nhanh: `--set KEY=VALUE`. Lưu cấu hình: sửa `best_config.json` rồi dùng `--config`.
 

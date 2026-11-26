@@ -1,23 +1,23 @@
-# Báo cáo Day 14 — <Họ và tên> — <MSSV>
+# Báo cáo Day 14 — Nguyễn Thành Đạt — 2A202603258
 
 > Sao chép file này thành `report/individual/<MSSV>_<HoTen>.md` (không dấu), ví dụ `2A20260000_NguyenVanAn.md`.
 
-- Mã học viên dùng với `--student`: `<ID>`
-- `seed_tag` trong `frames_A.txt`: `<...>`
+- Mã học viên dùng với `--student`: `2A202603258`
+- `seed_tag` trong `frames_A.txt`: `D14-CEA1144A4E81`
 
 ## 1. Dự đoán trước sweep (bước 5b)
 
 Ghi **trước** khi chạy `scripts/pp_sweep.py`, rồi commit và push ngay (lịch sử commit là bằng chứng thời điểm viết). Không sửa phần này sau khi có kết quả.
 
-- Tham số tôi nghĩ giảm công sửa nhiều nhất: ...
-- Vì sao (nhìn ảnh BEV tập A: box thừa nhiều hay box sót nhiều?): ...
+- Tham số tôi nghĩ giảm công sửa nhiều nhất: score_thr
+- Vì sao (nhìn ảnh BEV tập A: box thừa nhiều hay box sót nhiều?): box thừa nhiều
 
 ## 2. Tập A: sửa tay và tune
 
-| Cấu hình | Xóa | Thêm | Sửa | Chi phí |
-|---|---:|---:|---:|---:|
-| Gốc | | | | |
-| `best_config.json` | | | | |
+| Cấu hình           | Xóa | Thêm | Sửa | Chi phí |
+| ------------------ | --: | ---: | --: | ------: |
+| Gốc                |     |      |     |         |
+| `best_config.json` |     |      |     |         |
 
 - Tham số đã đổi trong `best_config.json`: ...
 - Kết quả leave-one-out (dán các dòng `scripts/pp_sweep.py` in ra): ...
@@ -35,8 +35,8 @@ Ghi **trước** khi chạy `scripts/pp_sweep.py`, rồi commit và push ngay (l
 Số đo từ `scripts/pp_prelabel.py --frames d14_<ID>/frames_B.txt --config d14_<ID>/best_config.json --gt d14_<ID>/ref_B.json`:
 
 | Xóa | Thêm | Sửa | Chi phí |
-|---:|---:|---:|---:|
-| | | | |
+| --: | ---: | --: | ------: |
+|     |      |     |         |
 
 - Loại box tốn công sửa nhất ở tập B: ...
 
